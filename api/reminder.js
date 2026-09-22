@@ -1,10 +1,36 @@
 export default async function handler(req, res) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
+  const secret = process.env.NOTIFIER_SECRET;
+
+  if (!token || !chatId || !secret) {
+    return res.status(500).json({
+      ok: false,
+      error: "Missing environment variables"
+    });
+  }
+
+  const providedSecret =
+    req.headers["x-notifier-secret"] ||
+    req.query.secret;
+
+  if (providedSecret !== secret) {
+    return res.status(401).json({
+      ok: false,
+      error: "Unauthorized"
+    });
+  }
 
   const text =
-    req.query.text ||
-    "Дежурный сержант на связи. Канал уведомлений работает.";
+    req.body?.text ||
+    req.query.text;
+
+  if (!text) {
+    return res.status(400).json({
+      ok: false,
+      error: "Missing text"
+    });
+  }
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
