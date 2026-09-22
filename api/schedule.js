@@ -9,6 +9,17 @@ export default async function handler(req, res) {
   const qstashToken = process.env.QSTASH_TOKEN;
   const chatgptKey = process.env.CHATGPT_REMINDER_KEY;
 
+  const providedKey =
+  req.headers["x-notifier-secret"] ||
+  req.query.key;
+
+if (providedKey !== chatgptKey) {
+  return res.status(401).json({
+    ok: false,
+    error: "Unauthorized"
+  });
+}
+
   if (!qstashToken || !chatgptKey) {
     return res.status(500).json({
       ok: false,
