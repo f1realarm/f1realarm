@@ -1,20 +1,27 @@
 export default async function handler(req, res) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  const secret = process.env.NOTIFIER_SECRET;
 
-  if (!token || !chatId || !secret) {
+  const notifierSecret = process.env.NOTIFIER_SECRET;
+  const chatgptKey = process.env.CHATGPT_REMINDER_KEY;
+
+  if (!token || !chatId || !notifierSecret || !chatgptKey) {
     return res.status(500).json({
       ok: false,
       error: "Missing environment variables"
     });
   }
 
-  const providedSecret =
+  const providedKey =
     req.headers["x-notifier-secret"] ||
-    req.query.secret;
+    req.query.secret ||
+    req.query.key;
 
-  if (providedSecret !== secret) {
+  const authorized =
+    providedKey === notifierSecret ||
+    providedKey === chatgptKey;
+
+  if (!authorized) {
     return res.status(401).json({
       ok: false,
       error: "Unauthorized"
